@@ -33,60 +33,75 @@ private:
     int windowWidth;
     int windowHeight;
     sf::RenderWindow window;
-    sf::RectangleShape background;
     sf::Font font;
     sf::Text scoreText;
     sf::SoundBuffer buffer;
     sf::Sound fruitSound;
-    std::vector<sf::RectangleShape> blocks;
-    sf::CircleShape fruit;
+    std::vector<sf::Sprite> blocks;
+    sf::SoundBuffer deathsound;
+    sf::Sound deathSound;
+    sf::Texture head;
+    sf::Texture body;
+    sf::Texture fruitTexture;
+    sf::Texture backgroundTexture;
+    sf::Sprite background;
+    sf::Sprite headSprite;
+    sf::Sprite fruit;
 
     int score;
-    bool isLeft;
-    bool isRight;
-    bool isUp;
-    bool isDown;
+    char direction = 'n';
 
     sf::Clock clock;
     const float moveInterval = 0.1f;
     float timeSinceLastMove = 0.f;
 
     void setup() {
-        background.setSize(sf::Vector2f(windowWidth, windowHeight));
-        background.setFillColor(sf::Color(136, 139, 141));
-
-        if (!font.loadFromFile("F:/CLionProjects/SnakeGameSFML/Lindelof-Font.ttf")) {
+        if(!backgroundTexture.loadFromFile("./assets/images/kita.png")){
+            std::cout << "Error loading background texture" << std::endl;
+        }
+        background.setTexture(backgroundTexture);
+        //load the font
+        if (!font.loadFromFile("./assets/fonts/Lindelof-Font.ttf")) {
             std::cout << "Error loading font" << std::endl;
         }
 
+        //load the textures
+        if (!head.loadFromFile("./assets/images/snakehead2.png")) {
+            std::cout << "Error loading head texture" << std::endl;
+        }
+        if (!body.loadFromFile("./assets/images/snakebody2.png")) {
+            std::cout << "Error loading body texture" << std::endl;
+        }
+        if (!fruitTexture.loadFromFile("./assets/images/apple.png")) {
+            std::cout << "Error loading fruit texture" << std::endl;
+        }
+
+
+
+        //set up the score text
         scoreText.setFont(font);
         scoreText.setString("Score: 0");
         scoreText.setFillColor(sf::Color::Black);
         scoreText.setCharacterSize(24);
         scoreText.setPosition(350, 10);
 
-        if (!buffer.loadFromFile("F:/CLionProjects/SnakeGameSFML/eating.wav")) {
+        if (!buffer.loadFromFile("./assets/sounds/eating.wav")) {
             std::cerr << "Error loading voice!" << std::endl;
         }
 
         fruitSound.setBuffer(buffer);
 
-        sf::RectangleShape headBlock;
-        headBlock.setSize(sf::Vector2f(20.f, 20.f));
-        headBlock.setFillColor(sf::Color(75, 0, 130));
-        headBlock.setPosition(sf::Vector2f(200.f, 200.f));
-        blocks.push_back(headBlock);
+        headSprite.setTexture(head);
+        headSprite.setScale(0.1f, 0.1f);
+        headSprite.setPosition(windowWidth / 2, windowHeight / 2);
+        blocks.push_back(headSprite);
 
-        fruit.setRadius(10.f);
+        fruit.setTexture(fruitTexture);
         sf::Vector2f fruitPosition(rand() % (windowWidth - 20), rand() % (windowHeight - 20));
-        fruit.setFillColor(sf::Color(255, 255, 0));
         fruit.setPosition(fruitPosition);
+        fruit.setScale(0.8f, 0.8f);
 
         score = 0;
-        isLeft = false;
-        isRight = false;
-        isUp = false;
-        isDown = false;
     }
 
     void handleEvents() {
@@ -97,15 +112,24 @@ private:
             }
         }
     }
+    void addBodySegment() {
+        sf::Sprite bodySprite;
+        bodySprite.setTexture(body);
+        bodySprite.setScale(0.1f, 0.1f);
+
+        // Position the new body segment based on the position and rotation of the last body segment
+        sf::Sprite& lastSegment = blocks.back();
+        bodySprite.setPosition(lastSegment.getPosition());
+
+        blocks.push_back(bodySprite);
+    }
+
 
     void update() {
         if (fruit.getGlobalBounds().intersects(blocks[0].getGlobalBounds())) {
             fruitSound.play();
 
-            sf::RectangleShape newBlock(sf::Vector2f(20.f, 20.f));
-            newBlock.setFillColor(sf::Color(255, 203, 164));
-            newBlock.setPosition(blocks.back().getPosition());
-            blocks.push_back(newBlock);
+            addBodySegment();
 
             score++;
             scoreText.setString("Score: " + std::to_string(score));
@@ -140,58 +164,42 @@ private:
     }
 
     void handleInput() {
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left) && !isRight) {
-            isLeft = true;
-            isRight = false;
-            isUp = false;
-            isDown = false;
-        }
-        else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right) && !isLeft) {
-            isLeft = false;
-            isRight = true;
-            isUp = false;
-            isDown = false;
-        }
-        else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up) && !isDown) {
-            isLeft = false;
-            isRight = false;
-            isUp = true;
-            isDown = false;
-        }
-        else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down) && !isUp) {
-            isLeft = false;
-            isRight = false;
-            isUp = false;
-            isDown = true;
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left) && direction != 'r') {
+            direction = 'l';
+        } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right) && direction != 'l') {
+            direction = 'r';
+        } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up) && direction != 'd') {
+            direction = 'u';
+        } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down) && direction != 'u') {
+            direction = 'd';
         }
     }
 
     void moveSnake() {
-        if (isLeft) {
-            for (int i = blocks.size() - 1; i > 0; i--) {
-                blocks[i].setPosition(blocks[i - 1].getPosition());
-            }
-            blocks[0].move(-20.f, 0.f);
+        sf::Vector2f movement;
+
+        switch (direction) {
+            case 'l':
+                movement.x -= 20;
+                break;
+            case 'r':
+                movement.x += 20;
+                break;
+            case 'u':
+                movement.y -= 20;
+                break;
+            case 'd':
+                movement.y += 20;
+                break;
         }
-        else if (isRight) {
-            for (int i = blocks.size() - 1; i > 0; i--) {
-                blocks[i].setPosition(blocks[i - 1].getPosition());
-            }
-            blocks[0].move(20.f, 0.f);
+
+        for (int i = blocks.size() - 1; i > 0; i--) {
+            blocks[i].setPosition(blocks[i - 1].getPosition());
         }
-        else if (isUp) {
-            for (int i = blocks.size() - 1; i > 0; i--) {
-                blocks[i].setPosition(blocks[i - 1].getPosition());
-            }
-            blocks[0].move(0.f, -20.f);
-        }
-        else if (isDown) {
-            for (int i = blocks.size() - 1; i > 0; i--) {
-                blocks[i].setPosition(blocks[i - 1].getPosition());
-            }
-            blocks[0].move(0.f, 20.f);
-        }
+
+        blocks[0].move(movement);
     }
+
 
     void checkCollision() {
         for (int i = 2; i < blocks.size(); i++) {
@@ -218,7 +226,7 @@ private:
         scoreText.setString(" Final Score: " + std::to_string(score));
         scoreText.setStyle(sf::Text::Bold);
         scoreText.setCharacterSize(50);
-        scoreText.setFillColor(sf::Color::Yellow);
+        scoreText.setFillColor(sf::Color::Cyan);
 
         while (window.isOpen()) {
             sf::Event event;
@@ -229,13 +237,13 @@ private:
             }
 
             sf::Texture backgroundTexture;
-            if (!backgroundTexture.loadFromFile("F:/CLionProjects/SnakeGameSFML/snakedead.png")) {
+            if (!backgroundTexture.loadFromFile("assets/images/snakedeath.jpeg")) {
                 std::cout << "Error loading background" << std::endl;
             }
 
             window.clear();
             sf::Sprite background(backgroundTexture);
-            background.setScale(1.2, 1.0);
+            background.setScale(0.8, 0.7);
             window.draw(background);
             window.draw(scoreText);
             window.draw(gameOverText);
