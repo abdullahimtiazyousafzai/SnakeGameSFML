@@ -56,23 +56,23 @@ private:
     float timeSinceLastMove = 0.f;
 
     void setup() {
-        if(!backgroundTexture.loadFromFile("./assets/images/kita.png")){
+        if(!backgroundTexture.loadFromFile("../assets/images/kita.png")){
             std::cout << "Error loading background texture" << std::endl;
         }
         background.setTexture(backgroundTexture);
         //load the font
-        if (!font.loadFromFile("./assets/fonts/Lindelof-Font.ttf")) {
+        if (!font.loadFromFile("../assets/fonts/Lindelof-Font.ttf")) {
             std::cout << "Error loading font" << std::endl;
         }
 
         //load the textures
-        if (!head.loadFromFile("./assets/images/snakehead2.png")) {
+        if (!head.loadFromFile("../assets/images/snakehead2.png")) {
             std::cout << "Error loading head texture" << std::endl;
         }
-        if (!body.loadFromFile("./assets/images/snakebody2.png")) {
+        if (!body.loadFromFile("../assets/images/snakebody2.png")) {
             std::cout << "Error loading body texture" << std::endl;
         }
-        if (!fruitTexture.loadFromFile("./assets/images/apple.png")) {
+        if (!fruitTexture.loadFromFile("../assets/images/apple.png")) {
             std::cout << "Error loading fruit texture" << std::endl;
         }
 
@@ -85,7 +85,7 @@ private:
         scoreText.setCharacterSize(24);
         scoreText.setPosition(350, 10);
 
-        if (!buffer.loadFromFile("./assets/sounds/eating.wav")) {
+        if (!buffer.loadFromFile("../assets/sounds/eating.wav")) {
             std::cerr << "Error loading voice!" << std::endl;
         }
 
@@ -237,7 +237,7 @@ private:
             }
 
             sf::Texture backgroundTexture;
-            if (!backgroundTexture.loadFromFile("assets/images/snakedeath.jpeg")) {
+            if (!backgroundTexture.loadFromFile("../assets/images/snakedeath.jpeg")) {
                 std::cout << "Error loading background" << std::endl;
             }
 
